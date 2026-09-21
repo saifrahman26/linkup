@@ -1,5 +1,6 @@
 package com.example.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -133,25 +134,54 @@ fun PeopleScreen(
             }
         }
 
-        // Count Summary
+        // Count Summary & Screen Title
         item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Card(
+                colors = CardDefaults.cardColors(containerColor = SurfaceContainerLowest),
+                shape = RoundedCornerShape(14.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    text = "${filteredAttendees.size} Attendees on Radar",
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Secondary
-                )
-                Text(
-                    text = "Moscone West Live",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFF006948)
-                )
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFF00A86B))
+                            )
+                            Text(
+                                text = "WHO IS HERE RIGHT NOW?",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF006948),
+                                letterSpacing = 0.5.sp
+                            )
+                        }
+
+                        Text(
+                            text = "${filteredAttendees.size} Active in Venue",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Primary
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Relationship reasons prioritized over raw proximity.",
+                        fontSize = 12.sp,
+                        color = Secondary
+                    )
+                }
             }
         }
 
@@ -166,104 +196,137 @@ fun PeopleScreen(
                     .clickable { onAttendeeClick(attendee) }
                     .testTag("person_item_${attendee.id}")
             ) {
-                Row(
+                Column(
                     modifier = Modifier.padding(14.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(50.dp)
-                            .clip(CircleShape)
-                            .border(1.5.dp, PrimaryFixed, CircleShape)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        AsyncImage(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(attendee.avatarUrl)
-                                .crossfade(true)
-                                .build(),
-                            contentDescription = attendee.name,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    }
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        Box(
+                            modifier = Modifier
+                                .size(50.dp)
+                                .clip(CircleShape)
+                                .border(1.5.dp, PrimaryFixed, CircleShape)
                         ) {
-                            Text(
-                                text = attendee.name,
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = OnSurface
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(attendee.avatarUrl)
+                                    .crossfade(true)
+                                    .build(),
+                                contentDescription = attendee.name,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
                             )
-                            if (attendee.verified) {
-                                Icon(
-                                    imageVector = Icons.Default.Verified,
-                                    contentDescription = "Verified",
-                                    tint = Primary,
-                                    modifier = Modifier.size(15.dp)
-                                )
-                            }
                         }
 
-                        Text(
-                            text = "${attendee.title} · ${attendee.company}",
-                            fontSize = 12.sp,
-                            color = Secondary,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            StatusPill(text = attendee.status, isLive = attendee.isAvailable)
-                            Surface(
-                                color = SecondaryContainer,
-                                shape = RoundedCornerShape(4.dp)
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 Text(
-                                    text = "${attendee.matchScore}% FIT",
-                                    fontSize = 10.sp,
+                                    text = attendee.name,
+                                    fontSize = 15.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = Primary,
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    color = OnSurface
                                 )
+                                if (attendee.verified) {
+                                    Icon(
+                                        imageVector = Icons.Default.Verified,
+                                        contentDescription = "Verified",
+                                        tint = Primary,
+                                        modifier = Modifier.size(15.dp)
+                                    )
+                                }
+                            }
+
+                            Text(
+                                text = "${attendee.title} · ${attendee.company}",
+                                fontSize = 12.sp,
+                                color = Secondary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+
+                            Spacer(modifier = Modifier.height(3.dp))
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                StatusPill(text = attendee.status, isLive = attendee.isAvailable)
+                                Surface(
+                                    color = SecondaryContainer,
+                                    shape = RoundedCornerShape(4.dp)
+                                ) {
+                                    Text(
+                                        text = "${attendee.matchScore}% FIT",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Primary,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        if (attendee.connectionStatus == ConnectionStatus.CONNECTED) {
+                            FilledTonalButton(
+                                onClick = { onAttendeeClick(attendee) },
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                                colors = ButtonDefaults.filledTonalButtonColors(
+                                    containerColor = Color(0xFFE6F7ED),
+                                    contentColor = Color(0xFF006948)
+                                ),
+                                modifier = Modifier.height(34.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Chat,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                            }
+                        } else {
+                            Button(
+                                onClick = { onConnectClick(attendee) },
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Primary),
+                                modifier = Modifier.height(34.dp)
+                            ) {
+                                Text("Meet", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
 
-                    if (attendee.connectionStatus == ConnectionStatus.CONNECTED) {
-                        FilledTonalButton(
-                            onClick = { onAttendeeClick(attendee) },
-                            shape = RoundedCornerShape(8.dp),
-                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                            colors = ButtonDefaults.filledTonalButtonColors(
-                                containerColor = Color(0xFFE6F7ED),
-                                contentColor = Color(0xFF006948)
-                            ),
-                            modifier = Modifier.height(34.dp)
+                    // Primary Relationship Reason Box
+                    Surface(
+                        color = SurfaceContainerLow,
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(10.dp),
+                            verticalAlignment = Alignment.Top,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Chat,
+                                imageVector = Icons.Default.Psychology,
                                 contentDescription = null,
-                                modifier = Modifier.size(14.dp)
+                                tint = Primary,
+                                modifier = Modifier
+                                    .size(15.dp)
+                                    .padding(top = 1.dp)
                             )
-                        }
-                    } else {
-                        Button(
-                            onClick = { onConnectClick(attendee) },
-                            shape = RoundedCornerShape(8.dp),
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Primary),
-                            modifier = Modifier.height(34.dp)
-                        ) {
-                            Text("Intro", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text(
+                                text = attendee.whyMeetReason,
+                                fontSize = 12.sp,
+                                color = OnSurface,
+                                lineHeight = 16.sp
+                            )
                         }
                     }
                 }

@@ -108,7 +108,7 @@ fun AuthScreen(
             item {
                 Column {
                     Text(
-                        text = "Let's get you connected.",
+                        text = "Welcome to Tech Summit '26",
                         fontSize = 28.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = OnSurface,
@@ -116,7 +116,15 @@ fun AuthScreen(
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        text = "Sign in with your registered event email or social profile to unlock your live summit radar.",
+                        text = "Let's build your networking plan.",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Primary,
+                        lineHeight = 22.sp
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Takes less than 60 seconds to personalize 5 high-signal people worth meeting today.",
                         fontSize = 13.sp,
                         color = Secondary,
                         lineHeight = 18.sp

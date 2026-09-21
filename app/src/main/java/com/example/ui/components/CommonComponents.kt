@@ -266,17 +266,17 @@ fun BottomNavigationTabs(
             onClick = { onTabSelected("discover") },
             icon = {
                 Icon(
-                    imageVector = if (selectedTab == "discover") Icons.Filled.Explore else Icons.Outlined.Explore,
-                    contentDescription = "Discover"
+                    imageVector = if (selectedTab == "discover") Icons.Filled.AssignmentInd else Icons.Outlined.AssignmentInd,
+                    contentDescription = "Plan"
                 )
             },
-            label = { Text("Discover", fontSize = 11.sp) },
+            label = { Text("Plan", fontSize = 11.sp, fontWeight = FontWeight.SemiBold) },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = Primary,
                 selectedTextColor = Primary,
                 indicatorColor = SecondaryContainer
             ),
-            modifier = Modifier.testTag("nav_tab_discover")
+            modifier = Modifier.testTag("nav_tab_plan")
         )
 
         NavigationBarItem(

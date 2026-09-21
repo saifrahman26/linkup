@@ -20,12 +20,16 @@ import com.example.ui.theme.OrbitTheme
 import kotlinx.coroutines.launch
 
 sealed class Screen {
+    data object EventQrEntry : Screen()
+    data object OrganizerTvDisplay : Screen()
     data object Welcome : Screen()
     data object Auth : Screen()
     data object OnboardingInterests : Screen()
     data object OnboardingIntents : Screen()
     data object OnboardingOffers : Screen()
     data class Main(val tab: String = "discover") : Screen()
+    data object Schedule : Screen()
+    data object EndOfEventRecap : Screen()
     data class AttendeeDetail(val attendee: Attendee, val returnTab: String = "discover") : Screen()
     data class OrganizerDashboard(val returnScreen: Screen = Main()) : Screen()
 }
@@ -44,8 +48,11 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun OrbitApp() {
-    var currentScreen by remember { mutableStateOf<Screen>(Screen.Welcome) }
+    var currentScreen by remember { mutableStateOf<Screen>(Screen.EventQrEntry) }
     var connectionDialogAttendee by remember { mutableStateOf<Attendee?>(null) }
+    var meetingRequestAttendee by remember { mutableStateOf<Attendee?>(null) }
+    var meetingSentInfo by remember { mutableStateOf<Triple<String, String, String>?>(null) }
+    var feedbackMeeting by remember { mutableStateOf<com.example.data.ScheduledMeeting?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
@@ -54,27 +61,45 @@ fun OrbitApp() {
     val unreadNotifsCount = notifications.count { it.isUnread }
 
     // Handle system back button properly across screens
-    BackHandler(enabled = currentScreen !is Screen.Welcome) {
+    BackHandler(enabled = currentScreen !is Screen.EventQrEntry) {
         when (val screen = currentScreen) {
-            is Screen.Auth -> currentScreen = Screen.Welcome
+            is Screen.OrganizerTvDisplay -> currentScreen = Screen.EventQrEntry
+            is Screen.Welcome -> currentScreen = Screen.EventQrEntry
+            is Screen.Auth -> currentScreen = Screen.EventQrEntry
             is Screen.OnboardingInterests -> currentScreen = Screen.Auth
             is Screen.OnboardingIntents -> currentScreen = Screen.OnboardingInterests
             is Screen.OnboardingOffers -> currentScreen = Screen.OnboardingIntents
+            is Screen.Schedule -> currentScreen = Screen.Main("discover")
+            is Screen.EndOfEventRecap -> currentScreen = Screen.Schedule
             is Screen.AttendeeDetail -> currentScreen = Screen.Main(screen.returnTab)
             is Screen.OrganizerDashboard -> currentScreen = screen.returnScreen
             is Screen.Main -> {
                 if (screen.tab != "discover") {
                     currentScreen = Screen.Main("discover")
                 } else {
-                    currentScreen = Screen.Welcome
+                    currentScreen = Screen.EventQrEntry
                 }
             }
-            Screen.Welcome -> {}
+            Screen.EventQrEntry -> {}
         }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
         when (val screen = currentScreen) {
+            is Screen.EventQrEntry -> {
+                EventQrEntryScreen(
+                    onScanOrContinue = { currentScreen = Screen.Auth },
+                    onOpenOrganizerTvMode = { currentScreen = Screen.OrganizerTvDisplay },
+                    onOrganizerDashboard = { currentScreen = Screen.OrganizerDashboard(Screen.EventQrEntry) }
+                )
+            }
+
+            is Screen.OrganizerTvDisplay -> {
+                OrganizerTvDisplayScreen(
+                    onClose = { currentScreen = Screen.EventQrEntry }
+                )
+            }
+
             is Screen.Welcome -> {
                 WelcomeScreen(
                     onStartOnboarding = { currentScreen = Screen.OnboardingInterests },
@@ -86,7 +111,7 @@ fun OrbitApp() {
             is Screen.Auth -> {
                 AuthScreen(
                     onAuthenticated = { currentScreen = Screen.OnboardingInterests },
-                    onBack = { currentScreen = Screen.Welcome },
+                    onBack = { currentScreen = Screen.EventQrEntry },
                     onOrganizerDashboard = { currentScreen = Screen.OrganizerDashboard(Screen.Auth) }
                 )
             }
@@ -114,11 +139,35 @@ fun OrbitApp() {
                 )
             }
 
+            is Screen.Schedule -> {
+                ScheduleScreen(
+                    onAttendeeClick = { attendee ->
+                        currentScreen = Screen.AttendeeDetail(attendee, returnTab = "discover")
+                    },
+                    onFeedbackClick = { meeting ->
+                        feedbackMeeting = meeting
+                    },
+                    onEndEventRecapClick = {
+                        currentScreen = Screen.EndOfEventRecap
+                    },
+                    onBack = { currentScreen = Screen.Main("discover") }
+                )
+            }
+
+            is Screen.EndOfEventRecap -> {
+                EndOfEventRecapScreen(
+                    onAttendeeClick = { attendee ->
+                        currentScreen = Screen.AttendeeDetail(attendee, returnTab = "discover")
+                    },
+                    onBack = { currentScreen = Screen.Main("discover") }
+                )
+            }
+
             is Screen.Main -> {
                 Scaffold(
                     topBar = {
                         OrbitHeader(
-                            title = "ORBIT RADAR",
+                            title = if (screen.tab == "discover") "NETWORKING PLAN" else "TECH SUMMIT '26",
                             showBack = false,
                             onOrganizerClick = {
                                 currentScreen = Screen.OrganizerDashboard(Screen.Main(screen.tab))
@@ -139,12 +188,15 @@ fun OrbitApp() {
                 ) { innerPadding ->
                     when (screen.tab) {
                         "discover" -> {
-                            DiscoverScreen(
+                            NetworkingPlanScreen(
                                 onAttendeeClick = { attendee ->
                                     currentScreen = Screen.AttendeeDetail(attendee, returnTab = "discover")
                                 },
-                                onConnectClick = { attendee ->
-                                    connectionDialogAttendee = attendee
+                                onRequestMeetingClick = { attendee ->
+                                    meetingRequestAttendee = attendee
+                                },
+                                onViewScheduleClick = {
+                                    currentScreen = Screen.Schedule
                                 },
                                 onOrganizerClick = {
                                     currentScreen = Screen.OrganizerDashboard(Screen.Main("discover"))
@@ -159,7 +211,7 @@ fun OrbitApp() {
                                     currentScreen = Screen.AttendeeDetail(attendee, returnTab = "people")
                                 },
                                 onConnectClick = { attendee ->
-                                    connectionDialogAttendee = attendee
+                                    meetingRequestAttendee = attendee
                                 },
                                 modifier = Modifier.padding(innerPadding)
                             )
@@ -184,7 +236,7 @@ fun OrbitApp() {
 
                         "profile" -> {
                             ProfileScreen(
-                                onSignOut = { currentScreen = Screen.Welcome },
+                                onSignOut = { currentScreen = Screen.EventQrEntry },
                                 onOrganizerDashboard = {
                                     currentScreen = Screen.OrganizerDashboard(Screen.Main("profile"))
                                 },
@@ -200,7 +252,7 @@ fun OrbitApp() {
                     attendee = screen.attendee,
                     onBack = { currentScreen = Screen.Main(screen.returnTab) },
                     onSendConnectionRequest = {
-                        connectionDialogAttendee = screen.attendee
+                        meetingRequestAttendee = screen.attendee
                     }
                 )
             }
@@ -212,7 +264,53 @@ fun OrbitApp() {
             }
         }
 
-        // Connection Request Dialog (Modal)
+        // Meeting Request Dialog (with time slots & location selection)
+        meetingRequestAttendee?.let { attendee ->
+            MeetingRequestDialog(
+                attendee = attendee,
+                onDismiss = { meetingRequestAttendee = null },
+                onRequestSent = { slot, loc, _ ->
+                    val name = attendee.name
+                    meetingRequestAttendee = null
+                    meetingSentInfo = Triple(name, slot, loc)
+                }
+            )
+        }
+
+        // Meeting Request Sent Waiting State Dialog
+        meetingSentInfo?.let { (name, slot, loc) ->
+            MeetingRequestSentDialog(
+                attendeeName = name,
+                timeSlot = slot,
+                location = loc,
+                onViewSchedule = {
+                    meetingSentInfo = null
+                    currentScreen = Screen.Schedule
+                },
+                onDismiss = {
+                    meetingSentInfo = null
+                }
+            )
+        }
+
+        // Post-Meeting Feedback Dialog
+        feedbackMeeting?.let { meeting ->
+            PostMeetingFeedbackDialog(
+                meeting = meeting,
+                onDismiss = { feedbackMeeting = null },
+                onSubmitFeedback = { rating, connType ->
+                    feedbackMeeting = null
+                    coroutineScope.launch {
+                        snackbarHostState.showSnackbar(
+                            message = "Feedback saved for ${meeting.attendee.name} ($rating · $connType)",
+                            duration = SnackbarDuration.Short
+                        )
+                    }
+                }
+            )
+        }
+
+        // Connection Request Dialog (Modal fallback)
         connectionDialogAttendee?.let { attendee ->
             ConnectionRequestDialog(
                 attendee = attendee,
@@ -222,7 +320,7 @@ fun OrbitApp() {
                     connectionDialogAttendee = null
                     coroutineScope.launch {
                         snackbarHostState.showSnackbar(
-                            message = "Connection request dispatched to $name! You'll be notified when accepted.",
+                            message = "Connection request dispatched to $name!",
                             duration = SnackbarDuration.Short
                         )
                     }

@@ -118,3 +118,28 @@ data class LiveMatchPair(
     val location: String,
     val timeAgo: String
 )
+
+enum class MeetingStatus {
+    PENDING_RESPONSE, // sent, waiting
+    INCOMING_REQUEST, // received from someone else
+    ACCEPTED_SCHEDULED,
+    IN_PROGRESS,
+    COMPLETED_NEEDS_FEEDBACK,
+    FEEDBACK_SUBMITTED,
+    DECLINED
+}
+
+data class ScheduledMeeting(
+    val id: String,
+    val attendee: Attendee,
+    val timeSlot: String,      // e.g. "11:30–11:45"
+    val startTimestampMinutes: Int = 11 * 60 + 30, // For countdown logic
+    val location: String,      // e.g. "Lounge A", "Networking Zone", "Coffee Area"
+    val status: MeetingStatus = MeetingStatus.ACCEPTED_SCHEDULED,
+    val isIncoming: Boolean = false,
+    val note: String? = null,
+    val countdownMinutes: Int = 8,
+    val countdownSeconds: Int = 42,
+    val feedbackRating: String? = null, // "Very relevant", "Somewhat relevant", "Not relevant"
+    val connectionType: String? = null  // "Customer", "Cofounder", "Investor", "Peer/Friend"
+)

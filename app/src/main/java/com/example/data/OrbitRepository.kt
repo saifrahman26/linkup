@@ -24,6 +24,26 @@ object OrbitRepository {
 
     private val initialAttendees = listOf(
         Attendee(
+            id = "att_0",
+            name = "Rahul Sharma",
+            title = "AI Engineer",
+            company = "AgentForge",
+            location = "San Francisco, CA",
+            avatarUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuDHlcadYbVBfTu1YhhaHvx1HNvVPl-W2BxDO9sS6NJ6CZZ2yDSy2t7f03hP1GnHl16oF15BdbUCdX7aHSu9lxLX6j3aPWw7gH2niuCqj710e2hyt2GTfCKPhp4kfozzVNgoJNg7X1ISVOisGHUr5r5d9HMoPYcA_HqwNUGAwXrSX-ypyuXT409WgHvXiVjT4Y5LijppLSX9LqUsVCYj2o-duiUc2c5xZ2ruR27s0NLVmQQkVlPSiSs29Q",
+            badge = "BUILDING AI AGENTS",
+            badgeType = BadgeType.MUTUAL_NEED,
+            building = "Building AI agent infrastructure and multi-agent evaluation frameworks.",
+            lookingFor = "Looking for startup projects, founders building autonomous agents, enterprise pilot partners.",
+            canHelpWith = listOf("AI Agent Architecture", "Tool Calling & Evaluation", "Python/Rust Infra"),
+            whyMeetReason = "You're looking for an AI engineer. Rahul builds AI agent infrastructure and is looking for startup projects.",
+            status = "Orbit Lounge Level 2",
+            isAvailable = true,
+            recentTalk = "Workshop: Hardening Tool Use in Multi-Agent Loops",
+            mutualContext = "Checked in at Tech Summit '26 · Available today",
+            matchScore = 98,
+            category = "AI/Systems"
+        ),
+        Attendee(
             id = "att_1",
             name = "Aisha Khan",
             title = "VP of Infrastructure",
@@ -337,6 +357,112 @@ object OrbitRepository {
     fun markAllNotificationsRead() {
         _notifications.update { list ->
             list.map { it.copy(isUnread = false) }
+        }
+    }
+
+    // Today's Scheduled & Requested Meetings
+    private val initialMeetings = listOf(
+        ScheduledMeeting(
+            id = "meet_active_rahul",
+            attendee = initialAttendees[0], // Rahul Sharma
+            timeSlot = "11:30–11:45",
+            startTimestampMinutes = 11 * 60 + 30,
+            location = "Networking Zone · Table 4",
+            status = MeetingStatus.ACCEPTED_SCHEDULED,
+            isIncoming = false,
+            note = "Explore agent infra for Vesper's verification pipeline",
+            countdownMinutes = 8,
+            countdownSeconds = 42
+        ),
+        ScheduledMeeting(
+            id = "meet_incoming_marcus",
+            attendee = initialAttendees[3], // Marcus Chen
+            timeSlot = "1:00–1:15",
+            startTimestampMinutes = 13 * 60,
+            location = "Coffee Area",
+            status = MeetingStatus.INCOMING_REQUEST,
+            isIncoming = true,
+            note = "Would love to discuss your seed round and evaluation benchmarks over quick espresso."
+        ),
+        ScheduledMeeting(
+            id = "meet_completed_elena",
+            attendee = initialAttendees[2], // Elena Rostova
+            timeSlot = "10:30–10:45",
+            startTimestampMinutes = 10 * 60 + 30,
+            location = "Lounge A",
+            status = MeetingStatus.COMPLETED_NEEDS_FEEDBACK,
+            isIncoming = false,
+            note = "Grounding research & alignment benchmarks"
+        )
+    )
+
+    private val _meetings = MutableStateFlow(initialMeetings)
+    val meetings: StateFlow<List<ScheduledMeeting>> = _meetings.asStateFlow()
+
+    // Send Meeting Request
+    fun requestMeeting(attendee: Attendee, timeSlot: String, location: String, note: String = "") {
+        val newMeeting = ScheduledMeeting(
+            id = "meet_${System.currentTimeMillis()}",
+            attendee = attendee,
+            timeSlot = timeSlot,
+            location = location,
+            status = MeetingStatus.PENDING_RESPONSE,
+            isIncoming = false,
+            note = note.ifEmpty { "Tech Summit '26 Networking Meetup" }
+        )
+        _meetings.update { listOf(newMeeting) + it }
+        // Update attendee connection status
+        _attendees.update { list ->
+            list.map { if (it.id == attendee.id) it.copy(connectionStatus = ConnectionStatus.REQUESTED) else it }
+        }
+    }
+
+    // Accept Incoming Meeting
+    fun acceptMeeting(meetingId: String) {
+        _meetings.update { list ->
+            list.map {
+                if (it.id == meetingId) it.copy(status = MeetingStatus.ACCEPTED_SCHEDULED) else it
+            }
+        }
+    }
+
+    // Decline Incoming Meeting
+    fun declineMeeting(meetingId: String) {
+        _meetings.update { list ->
+            list.map {
+                if (it.id == meetingId) it.copy(status = MeetingStatus.DECLINED) else it
+            }
+        }
+    }
+
+    // Suggest new time for incoming meeting
+    fun suggestAlternativeTime(meetingId: String, newTimeSlot: String) {
+        _meetings.update { list ->
+            list.map {
+                if (it.id == meetingId) it.copy(timeSlot = newTimeSlot, status = MeetingStatus.PENDING_RESPONSE) else it
+            }
+        }
+    }
+
+    // Submit Feedback
+    fun submitMeetingFeedback(meetingId: String, rating: String, connectionType: String) {
+        _meetings.update { list ->
+            list.map {
+                if (it.id == meetingId) it.copy(
+                    status = MeetingStatus.FEEDBACK_SUBMITTED,
+                    feedbackRating = rating,
+                    connectionType = connectionType
+                ) else it
+            }
+        }
+    }
+
+    // Mark arrived at meeting
+    fun markArrivedAtMeeting(meetingId: String) {
+        _meetings.update { list ->
+            list.map {
+                if (it.id == meetingId) it.copy(status = MeetingStatus.IN_PROGRESS) else it
+            }
         }
     }
 
