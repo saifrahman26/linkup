@@ -1,0 +1,6 @@
+{
+  "name": "Orbit",
+  "description": "High-signal instant matchmaking and event networking for Tech Summit 2026.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
